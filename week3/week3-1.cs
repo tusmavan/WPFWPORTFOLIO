@@ -33,7 +33,7 @@ namespace AsyncBoekOpdracht
     static class Database
     {
         private static List<Boek> lijst = new List<Boek>();
-        public static async void VoegToe(Boek b)
+        public static async Task VoegToe(Boek b)
         {
             await Willekeurig.Vertraging(); // INSERT INTO ...
             lijst.Add(b);
@@ -56,7 +56,7 @@ namespace AsyncBoekOpdracht
             var titel = Console.ReadLine();
             Console.WriteLine("Geef de auteur op: ");
             var auteur = Console.ReadLine();
-            Database.VoegToe(new Boek { Titel = titel, Auteur = auteur });
+            await Database.VoegToe(new Boek { Titel = titel, Auteur = auteur });
             Database.Logboek("Er is een nieuw boek!");
             Console.WriteLine("De huidige lijst met boeken is: ");
             List<Boek> lijst = await Database.HaalLijstOp();
@@ -88,25 +88,25 @@ namespace AsyncBoekOpdracht
             await Willekeurig.Vertraging(2000, 3000);
             Backupping = false;
         }
-        static async Task Main(string[] args)
-        {
-            Console.WriteLine("Welkom bij de boeken administratie!");
-            string key = null;
-            while (key != "q")
-            {
-                Console.WriteLine("+) Boek toevoegen");
-                Console.WriteLine("z) Boek zoeken");
-                Console.WriteLine("b) Backup maken van de boeken");
-                Console.WriteLine("q) Quit");
-                key = Console.ReadLine();
-                if (key == "+")
-                    await VoegBoekToe();
-                else if (key == "z")
-                    await ZoekBoekAsync();
-                else if (key == "b")
-                    Backup();
-                else Console.WriteLine("Ongeldige invoer!");
-            }
-        }
+        // static async Task Main(string[] args)
+        // {
+        //     Console.WriteLine("Welkom bij de boeken administratie!");
+        //     string key = null;
+        //     while (key != "q")
+        //     {
+        //         Console.WriteLine("+) Boek toevoegen");
+        //         Console.WriteLine("z) Boek zoeken");
+        //         Console.WriteLine("b) Backup maken van de boeken");
+        //         Console.WriteLine("q) Quit");
+        //         key = Console.ReadLine();
+        //         if (key == "+")
+        //             await VoegBoekToe();
+        //         else if (key == "z")
+        //             await ZoekBoekAsync();
+        //         else if (key == "b")
+        //             Backup();
+        //         else Console.WriteLine("Ongeldige invoer!");
+        //     }
+        // }
     }
 }

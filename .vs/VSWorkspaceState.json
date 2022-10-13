@@ -1,10 +1,10 @@
 {
   "ExpandedNodes": [
     "",
-    "\\bin\\Release",
     "\\obj",
-    "\\week2"
+    "\\week2",
+    "\\week3"
   ],
-  "SelectedNode": "\\week2\\GebruikerServiceTests.cs",
+  "SelectedNode": "\\week3\\week3-1.cs",
   "PreviewInSolutionExplorer": false
 }
