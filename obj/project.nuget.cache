@@ -1,0 +1,13 @@
+{
+  "version": 2,
+  "dgSpecHash": "BU/zduU+qyr9NEJEqIgem4xCpMP6t7G9MbY49HZKHZs0HNuoSXP+SP7icdCgJWzo9s0i1xW97gee5sfJNGJ3Ag==",
+  "success": true,
+  "projectFilePath": "C:\\Users\\IZO\\OneDrive - DGMR\\Documents\\Portfolio\\Portfolio.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\IZO\\.nuget\\packages\\castle.core\\5.1.0\\castle.core.5.1.0.nupkg.sha512",
+    "C:\\Users\\IZO\\.nuget\\packages\\moq\\4.18.2\\moq.4.18.2.nupkg.sha512",
+    "C:\\Users\\IZO\\.nuget\\packages\\mstest.testframework\\2.3.0-preview-20220810-02\\mstest.testframework.2.3.0-preview-20220810-02.nupkg.sha512",
+    "C:\\Users\\IZO\\.nuget\\packages\\system.diagnostics.eventlog\\6.0.0\\system.diagnostics.eventlog.6.0.0.nupkg.sha512"
+  ],
+  "logs": []
+}
