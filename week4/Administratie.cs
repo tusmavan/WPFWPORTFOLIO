@@ -2,6 +2,9 @@ using Microsoft.EntityFrameworkCore.SqlServer;
 using Microsoft.EntityFrameworkCore;
 using Opdracht;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Collections.Immutable;
+using System.Collections.Generic;
+using System.Reflection.Emit;
 
 namespace Administratie
 {
@@ -40,10 +43,10 @@ namespace Administratie
             ret += $"De oudste gast heeft een leeftijd van {await HoogsteLeeftijd()} \n";
 
             ret += "De verdeling van de gasten per dag is als volgt: \n";
-            /*var dagAantallen = await VerdelingPerDag();
+            var dagAantallen = await VerdelingPerDag();
             var totaal = dagAantallen.Select(t => t.aantal).Max();
             foreach (var dagAantal in dagAantallen)
-                ret += $"{dagAantal.dag}: {new string('#', (int)(dagAantal.aantal / (double)totaal * 20))}\n";*/
+                ret += $"{dagAantal.dag}: {new string('#', (int)(dagAantal.aantal / (double)totaal * 20))}\n";
 
             //ret += $"{await FavorietCorrect()} gasten hebben de favoriete attractie inderdaad het vaakst bezocht. \n";
 
@@ -55,15 +58,19 @@ namespace Administratie
         private async Task<Gast> GastBijEmail(string email) => context.Gasten.SingleOrDefault(g => g.Email == email) ?? null;
         private async Task<Gast?> GastBijGeboorteDatum(DateTime d) => context.Gasten.SingleOrDefault(g => g.GeboorteDatum == d);
         private async Task<double> PercentageBejaarden() => context.Gasten.Count(g => EF.Functions.DateDiffDay(g.GeboorteDatum, DateTime.Now) / 365.25 > 80) / context.Gasten.Count();
-        private async Task<int> HoogsteLeeftijd() =>  Convert.ToInt32(EF.Functions.DateDiffDay(context.Gasten.OrderBy(i => i.GeboorteDatum).First().GeboorteDatum, DateTime.Now) / 365.25)  ;
+        private async Task<int> HoogsteLeeftijd() => Convert.ToInt32(EF.Functions.DateDiffDay(context.Gasten.OrderBy(i => i.GeboorteDatum).First().GeboorteDatum, DateTime.Now) / 365.25);
         private async Task<(string dag, int aantal)[]> VerdelingPerDag()
         {
-            var ding = context.Gasten.GroupBy(g => g.EersteBezoek.DayOfWeek.ToString()).ToList();
+            var ding = context.Gasten.GroupBy(g => g.EersteBezoek.DayOfWeek.ToString());
 
-            var dn = context.Gasten.DistinctBy(g => g.EersteBezoek.DayOfWeek.ToString()).ToList();
 
-            var omg = context.Gasten.Count(g.EersteBezoek).Groupby()
-            
+            var list = new List<(string, int)>();
+
+            foreach (var i in ding)
+            {
+                list.Add((i.Key.ToString(), i.Count()));
+            }
+            return list.ToArray();
         }
 
 
@@ -76,9 +83,11 @@ namespace Administratie
         private static async Task<T> Willekeurig<T>(DbContext c) where T : class => await c.Set<T>().OrderBy(r => EF.Functions.Random()).FirstAsync();
         public static async Task Main(string[] args)
         {
+
             Random random = new Random(1);
             using (DatabaseContext c = new DatabaseContext())
             {
+                c.Database.Migrate();
                 c.Attracties.RemoveRange(c.Attracties);
                 c.Gebruikers.RemoveRange(c.Gebruikers);
                 c.Gasten.RemoveRange(c.Gasten);
@@ -120,7 +129,7 @@ namespace Administratie
         }
     }
 
-    class DatabaseContext : DbContext
+    public class DatabaseContext : DbContext
     {
         public DbSet<Gast> Gasten { get; set; }
         public DbSet<Medewerker> Medewerkers { get; set; }
@@ -129,7 +138,17 @@ namespace Administratie
         public DbSet<Onderhoud> Onderhoud { get; set; }
         public DbSet<Reservering> Reserveringen { get; set; }
 
-        //public Task<bool> Boek(Gast g, Attractie a, DateTimeBereik d) => ;
+        public async Task<bool> Boek(Gast g, Attractie a, DateTimeBereik d)
+        {
+            if (await a.Vrij(this, d))
+            {
+                g.Credits--;
+                Gasten.Update(g);
+                Reserveringen.Add(new Reservering { Attractie = a, dateTimeBereik = d, gast = g });
+                return true;
+            }
+            return false;
+        }
 
         protected void OnModelCreating(ModelBuilder builder) { }
 
@@ -139,20 +158,20 @@ namespace Administratie
     public class Onderhoud
     {
         public string Probleem { get; set; }
-        private DateTimeBereik dateTimeBereik;
-        private Attractie Attractie { get; set; }
-        private List<Medewerker>? Coordineert;
-        private List<Medewerker>? Doet;
+        public DateTimeBereik dateTimeBereik;
+        public Attractie Attractie { get; set; }
+        public List<Medewerker>? Coordineert;
+        public List<Medewerker>? Doet;
     }
 
     public class Reservering
     {
-        private Gast? gast;
-        private Attractie? Attractie { get; set; }
-        private DateTimeBereik dateTimeBereik;
+        public Gast? gast;
+        public Attractie? Attractie { get; set; }
+        public DateTimeBereik dateTimeBereik;
     }
 
-    class Attractie
+    public class Attractie
     {
         public string Naam;
         public List<Onderhoud>? onderhouds { get; set; }
@@ -164,12 +183,12 @@ namespace Administratie
             Naam = naam;
         }
 
-        //public Task<bool> OnderhoudBezig(DatabaseContext c) =>;
+        public Task<bool> OnderhoudBezig(DatabaseContext c) => c.Onderhoud.AnyAsync(x => x.dateTimeBereik.Eind < DateTime.Now);
 
-        //public Task<bool> Vrij(DatabaseContext c, DateTimeBereik d) =>;
-    }
+        public Task<bool> Vrij(DatabaseContext c, DateTimeBereik d) => c.Reserveringen.Where(x => x.Attractie == this).AnyAsync(x => x.dateTimeBereik.Overlapt(d));
+    };
 
-    class Gebruiker
+    public class Gebruiker
     {
         public string Email;
 
@@ -178,32 +197,32 @@ namespace Administratie
             Email = email;
         }
     }
-    class Medewerker : Gebruiker
+    public class Medewerker : Gebruiker
     {
         [InverseProperty("Coordinator")]
-        private List<Onderhoud>? Coordineert;
+        public List<Onderhoud>? Coordineert;
         [InverseProperty("Voert uit")]
-        private List<Onderhoud>? Doet;
+        public List<Onderhoud>? Doet;
         public Medewerker(string email) : base(email)
         {
         }
     }
 
     [Owned]
-    class Coordinate
+    public class Coordinate
     {
         public int X;
         public int Y;
     }
 
-    class GastInfo
+    public class GastInfo
     {
         public string LaatstBezochteUrl;
         public Gast gast;
         public Coordinaat coordinaat;
     }
 
-    class Gast : Gebruiker
+    public class Gast : Gebruiker
     {
         public int Credits;
         public DateTime GeboorteDatum;
@@ -223,7 +242,7 @@ namespace Administratie
     }
 
     [Owned]
-    class DateTimeBereik
+    public class DateTimeBereik
     {
         public DateTime Begin;
         public DateTime? Eind;
