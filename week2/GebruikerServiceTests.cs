@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Moq;
+using Administratie;
 
 namespace Opdracht.Tests
 {
@@ -14,15 +15,9 @@ namespace Opdracht.Tests
     {
 
         [TestMethod()]
-        public void GebruikerServiceTest()
-        {
-
-        }
-
-        [TestMethod()]
         public void RegistreerTest()
         {
-            var gebruikerService = new Mock<GebruikerServiceMock>();
+            var gebruikerService = new Mock<GebruikerService>();
             var mail = "mail";
             var ww = "wachtwoord";
             Gebruiker geb = gebruikerService.Object.Registreer(mail, ww);
@@ -36,7 +31,7 @@ namespace Opdracht.Tests
         [TestMethod()]
         public void LoginTest()
         {
-            var gebruikerService = new Mock<GebruikerServiceMock>();
+            var gebruikerService = new Mock<GebruikerService>();
             Gebruiker geb = gebruikerService.Object.Registreer("emailadres", "Wachtwoooord");
             gebruikerService.Object.Verifieer("emailadres", "token");
             Assert.IsTrue(gebruikerService.Object.Login("emailadres", "Wachtwoooord"));
@@ -46,7 +41,7 @@ namespace Opdracht.Tests
         [TestMethod()]
         public void VerifieerTest()
         {
-            var gebruikerService = new Mock<GebruikerServiceMock>();
+            var gebruikerService = new Mock<GebruikerService>();
             gebruikerService.Object.Registreer("mijnmail", "mijnww");
             Assert.IsFalse(gebruikerService.Object.Login("mijnmail", "mijnww"));
             gebruikerService.Object.Verifieer("mijnmail", "token");
@@ -56,7 +51,7 @@ namespace Opdracht.Tests
         [TestMethod()]
         public void VerifieerTestVerificatieVerlopen()
         {
-            var gebruikerService = new Mock<GebruikerServiceMock>();
+            var gebruikerService = new Mock<GebruikerService>();
             gebruikerService.Object.Registreer("mijnmail2", "mijnww2");
             Assert.IsFalse(gebruikerService.Object.Login("mijnmail2", "mijnww2"));
             gebruikerService.Object.context.GetGebruikerByMail("mijnmail2").verificatieToken.verloopDatum = DateTime.Now.AddDays(-1);
