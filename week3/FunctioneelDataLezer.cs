@@ -46,7 +46,7 @@ static class Lezer<T>
         );
 
     public static Func<int> MetNummer() {
-        return Functies.Getgetal();
+        return Record.Getalis;
     }
 
     public static string[] Filter(Func<string, bool> f, string[] args) => args switch {

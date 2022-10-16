@@ -188,20 +188,11 @@
 
     public class Testen
     {
-        static async Task Main(string[] args)
-        {
-            
-            string email;
-            
+        /*static async Task Main(string[] args)
+        {  
+            string email;  
             string ww;
             var service = new GebruikerService();
-            
-
-
-            
-            
-
-
             Console.WriteLine("Welkom");
             string key = null;
             while (key != "q")
@@ -245,6 +236,6 @@
                 else Console.WriteLine("Ongeldige invoer!");
             }
 
-        }
+        }*/
     }
 }
